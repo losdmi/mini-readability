@@ -1,12 +1,18 @@
 # from readability import Document
 import re
 
+import requests
 from bs4 import BeautifulSoup, Comment, NavigableString
 from urllib import request
 
-# url = 'https://lenta.ru/news/2018/11/14/sankcii/'
-# request.urlretrieve(url, 'lenta.txt')
+url = 'https://www.gazeta.ru/culture/photo/yubilei_svetlany_surganovoi.shtml'
+r = requests.get(url)
+with open('resources/gazeta.txt', 'wb') as file:
+    file.write(r.content)
+# request.urlretrieve(url, 'gazeta.txt')
 
+
+exit()
 whitelist = [
     'blockquote',
     'em',

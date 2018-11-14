@@ -1,6 +1,7 @@
 # from readability import Document
 import re
 
+import requests
 from bs4 import BeautifulSoup, Comment, NavigableString
 from urllib import request
 
@@ -29,7 +30,8 @@ blacklisted_tags = [
     'iframe',
     'svg',
     'nav',
-    'aside'
+    'aside',
+    'noindex'
 ]
 
 blacklisted_classes = [
@@ -48,10 +50,18 @@ text_headers = [
     'h6',
 ]
 
-with open('resources/lenta.txt', 'r') as file:
+
+
+###
+
+# url = 'https://www.gazeta.ru/culture/photo/yubilei_svetlany_surganovoi.shtml'
+# r = requests.get(url)
+
+with open('resources/gazeta.txt', 'rb') as file:
     webpage = file.read()
     # doc = Document(webpage)
     # print(doc.summary())
+# soup = BeautifulSoup(r.content, 'html.parser', from_encoding='windows-1251')
     soup = BeautifulSoup(webpage, 'html.parser')
     body = soup.find('body')
 
