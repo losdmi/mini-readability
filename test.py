@@ -1,7 +1,7 @@
 # from readability import Document
 import re
 
-from bs4 import BeautifulSoup, Comment
+from bs4 import BeautifulSoup, Comment, NavigableString
 from urllib import request
 
 # url = 'https://lenta.ru/news/2018/11/14/sankcii/'
@@ -39,12 +39,16 @@ text_headers = [
     'h6',
 ]
 
-html = """<div><div><div>foo</div></div></div><div>ofo</div><div><h3>bar</h3><h2></h2><h4 class='title'></h4><p>baz</p></div>"""
+html = """<div class="g-application js-root" id="root"><div><div>foo</div></div></div><div>ofo</div><div><h3>bar</h3><h2></h2><h4 class='title'></h4><p>baz</p></div>"""
 soup = BeautifulSoup(html, 'html.parser')
 for tag in soup.find_all():
-    tag.
-    print('{} - {} - {}'.format(tag, tag.children, len(tag.contents)))
+    # tag.
+    child_tags = [child_tag for child_tag in tag.contents if not isinstance(child_tag, NavigableString) and child_tag.name not in whitelist]
+    print('{} - {} - {}'.format(tag, child_tags, len(tag.contents)))
     # print('{} - {}'.format(tag, type(tag)))
+
+    if len(child_tags) == 1:
+        tag.unwrap()
 
 
 
@@ -69,4 +73,5 @@ for tag in soup.find_all():
 #     for comment in comments:
 #         comment.extract()
 #
+print()
 print(soup.prettify())

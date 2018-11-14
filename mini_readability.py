@@ -1,7 +1,7 @@
 # from readability import Document
 import re
 
-from bs4 import BeautifulSoup, Comment
+from bs4 import BeautifulSoup, Comment, NavigableString
 from urllib import request
 
 # url = 'https://lenta.ru/news/2018/11/14/sankcii/'
@@ -71,12 +71,19 @@ with open('resources/lenta.txt', 'r') as file:
         elif is_header:
             headers = list(map(lambda header: str(header), list(tag.find_all(text_headers))))
             tag.replace_with(BeautifulSoup(''.join(headers), "html.parser"))
-        # elif tag.contents
 
     # Extract comments
     comments = body.findAll(text=lambda text: isinstance(text, Comment))
     for comment in comments:
         comment.extract()
 
-    # print(body.prettify())
-    print(body.get_text())
+    for tag in body.find_all():
+        child_tags = [child_tag for child_tag in tag.contents if
+                      not isinstance(child_tag, NavigableString) and child_tag.name not in whitelist]
+        if len(child_tags) == 1:
+            tag.unwrap()
+
+    print(body.prettify())
+    # print(body.get_text())
+
+
