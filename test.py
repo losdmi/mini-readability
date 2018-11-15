@@ -1,9 +1,9 @@
 import requests
 from bs4 import BeautifulSoup, Comment, NavigableString
 
-url = 'https://ru.wikipedia.org/wiki/Python'
+url = 'https://medium.com/@KKruglov/%D0%B1%D1%83%D0%BC-%D0%BF%D0%BE%D0%B4%D0%BA%D0%B0%D1%81%D1%82%D0%BE%D0%B2-766495006408'
 r = requests.get(url)
-with open('resources/wikipedia.txt', 'wb') as file:
+with open('resources/medium2.txt', 'wb') as file:
     file.write(r.content)
 exit()
 

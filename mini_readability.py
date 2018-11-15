@@ -137,30 +137,6 @@ def unwrap_divs(_tag):
         _tag.unwrap()
 
 
-def remove_divs_with_short_content(_soup):
-    for _tag in _soup.find_all():
-        if not isinstance(_tag, NavigableString):
-            string_ = ''.join(tags_as_string(_tag.contents).split())
-
-            is_div_with_short_content = _tag.name == 'div' and len(string_) < 60
-            if is_div_with_short_content:
-                _tag.extract()
-            #     print('extracted')
-            #
-            # print()
-            # print()
-            # print()
-
-
-def remove_tags_that_only_contain_links(_soup):
-    for _tag in _soup.find_all():
-        _children = set([_child.name for _child in _tag.contents if _child.name is not None])
-        # print('{} ——— {} ——— {}'.format(_tag, _children, len(tags_as_string(_tag.contents))))
-        if _children == {'a'} and len(tags_as_string(_tag.contents)) < 120:
-            _tag.extract()
-            # print()
-
-
 def remove_tags_with_low_text_length_to_tag_length_ratio(_soup):
     for _tag in _soup.find_all():
         if _tag.name not in whitelisted_tags:
@@ -182,8 +158,10 @@ def remove_tags_with_low_text_length_to_tag_length_ratio(_soup):
 # file_path = 'resources/gazeta2.txt'
 # file_path = 'resources/gazeta3.txt'
 # file_path = 'resources/t-j.txt'
-file_path = 'resources/t-j2.txt'
-# file_path = 'resources/wikipedia.txt'
+# file_path = 'resources/t-j2.txt'
+# file_path = 'resources/some_blog.txt'
+# file_path = 'resources/medium.txt'
+file_path = 'resources/medium2.txt'
 with open(file_path, 'rb') as file:
     webpage = file.read()
     # doc = Document(webpage)
@@ -216,8 +194,7 @@ with open(file_path, 'rb') as file:
             unwrap_divs(tag)
             remove_if_empty(tag)
 
-        # remove_divs_with_short_content(body)
-        remove_tags_that_only_contain_links(body)
+        # TODO if site is wikipedia - don't run this
         remove_tags_with_low_text_length_to_tag_length_ratio(body)
 
         # print('===')
