@@ -166,18 +166,19 @@ def remove_tags_with_low_text_length_to_tag_length_ratio(_soup):
             if isinstance(_subtag, NavigableString):
                 _text_length += len(_subtag)
         ratio = _text_length / _tag_length
-        if ratio < 0.5:
+        if ratio < 0.4:
             _tag.extract()
+            print('{} ——— {} ——— {} ——— {}'.format(_tag, _text_length, _tag_length, _text_length / _tag_length))
         # print('{} ——— {} ——— {} ——— {}'.format(_tag, _text_length, _tag_length, _text_length / _tag_length))
 
 
 # file_path = 'resources/lenta.txt'
 # file_path = 'resources/lenta2.txt'
-# file_path = 'resources/gazeta.txt'
+file_path = 'resources/gazeta.txt'
 # file_path = 'resources/gazeta2.txt'
 # file_path = 'resources/gazeta3.txt'
 # file_path = 'resources/t-j.txt'
-file_path = 'resources/t-j2.txt'
+# file_path = 'resources/t-j2.txt'
 # file_path = 'resources/wikipedia.txt'
 with open(file_path, 'rb') as file:
     webpage = file.read()
@@ -213,8 +214,13 @@ with open(file_path, 'rb') as file:
         remove_tags_that_only_contain_links(body)
         remove_tags_with_low_text_length_to_tag_length_ratio(body)
 
-        if old_document == body.prettify():
-            break
+        # print('===')
+        # print('===')
+        # print('===')
+        # print(body.prettify())
+
+        # if old_document == body.prettify():
+        break
 
     print()
     print()
