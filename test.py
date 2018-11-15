@@ -1,18 +1,12 @@
-# from readability import Document
-import re
-
 import requests
 from bs4 import BeautifulSoup, Comment, NavigableString
-from urllib import request
 
-url = 'https://www.gazeta.ru/culture/photo/yubilei_svetlany_surganovoi.shtml'
-r = requests.get(url)
-with open('resources/gazeta.txt', 'wb') as file:
-    file.write(r.content)
-# request.urlretrieve(url, 'gazeta.txt')
+# url = 'https://www.gazeta.ru/culture/photo/yubilei_svetlany_surganovoi.shtml'
+# r = requests.get(url)
+# with open('resources/gazeta.txt', 'wb') as file:
+#     file.write(r.content)
+# exit()
 
-
-exit()
 whitelist = [
     'blockquote',
     'em',
@@ -45,39 +39,11 @@ text_headers = [
     'h6',
 ]
 
-html = """<div class="g-application js-root" id="root"><div><div>foo</div></div></div><div>ofo</div><div><h3>bar</h3><h2></h2><h4 class='title'></h4><p>baz</p></div>"""
+html = """<div><a><img/></a>Культура/<time>13.11.2018,19:15</time><a><img/></a>Культура/<time>13.11.2018,09:14</time><a><img/></a>Культура/<time>12.11.2018,22:35</time><a><img/></a>Культура/<time>12.11.2018,10:37</time><a><img/></a>Культура/<time>11.11.2018,10:56</time><a><img/></a>Культура/<time>10.11.2018,23:58</time><a><img/></a>Культура/<time>10.11.2018,22:09</time><a><img/></a>Культура/<time>10.11.2018,21:33</time><a><img/></a></div>"""
 soup = BeautifulSoup(html, 'html.parser')
 for tag in soup.find_all():
-    # tag.
-    child_tags = [child_tag for child_tag in tag.contents if not isinstance(child_tag, NavigableString) and child_tag.name not in whitelist]
-    print('{} - {} - {}'.format(tag, child_tags, len(tag.contents)))
-    # print('{} - {}'.format(tag, type(tag)))
+    # if isinstance(tag, NavigableString):
+        print(tag)
 
-    if len(child_tags) == 1:
-        tag.unwrap()
-
-
-
-    # print(dir(tag.find_all(text_headers)))
-    # headers = list(map(lambda header: str(header), list(tag.find_all(text_headers))))
-    # if len(headers) > 0:
-    #     tag.replace_with(BeautifulSoup(''.join(headers), "html.parser"))
-
-# with open('lenta.txt', 'r') as file:
-#     webpage = file.read()
-#     # doc = Document(webpage)
-#     # print(doc.summary())
-#     soup = BeautifulSoup(webpage)
-#     body = soup.find('body')
-#
-#     for tag in body.findAll():
-#         if tag.name.lower() in blacklist or not tag.contents:
-#             tag.extract()
-#
-#     # Extract comments
-#     comments = body.findAll(text=lambda text: isinstance(text, Comment))
-#     for comment in comments:
-#         comment.extract()
-#
 print()
 print(soup.prettify())
