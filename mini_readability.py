@@ -130,15 +130,17 @@ def remove_if_div_with_short_content(_soup):
     for _tag in _soup.find_all():
         if not isinstance(_tag, NavigableString):
             for _subtag in _tag.descendants:
-                _subtag.attrs = {}
+                if _subtag.name == 'a':
+                    _href = _subtag.attrs['href']
+                    _subtag.attrs = {'href': _href}
+                else:
+                    _subtag.attrs = {}
 
             string_ = ''.join(tags_as_string(_tag.contents).split())
 
-            # print('{} ——— {} ——— {}'.format(tag_, string_, len(string_)))
 
             is_div_with_short_content = _tag.name == 'div' and len(string_) < 60
-            _is_empty_tag = not _tag.get_text(strip=True) and _tag.name not in whitelisted_tags
-            if is_div_with_short_content or _is_empty_tag:
+            if is_div_with_short_content:
                 _tag.extract()
             #     print('extracted')
             #
@@ -150,9 +152,9 @@ def remove_if_div_with_short_content(_soup):
 def remove_if_tag_only_contain_links(_soup):
     for _tag in _soup.find_all():
         _children = set([_child.name for _child in _tag.contents if _child.name is not None])
-        if _children == {'a'}:
+        # print('{} ——— {} ——— {}'.format(_tag, _children, len(tags_as_string(_tag.contents))))
+        if _children == {'a'} and len(tags_as_string(_tag.contents)) < 120:
             _tag.extract()
-            # print('{} ——— {}'.format(_tag, _children))
             # print()
 
 
@@ -184,6 +186,7 @@ with open('resources/lenta.txt', 'rb') as file:
 
         for tag in body.find_all():
             unwrap_divs(tag)
+            remove_if_empty(tag)
 
         remove_if_div_with_short_content(body)
         remove_if_tag_only_contain_links(body)
