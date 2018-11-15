@@ -8,7 +8,6 @@ whitelisted_tags = [
     'blockquote',
     'em',
     'i',
-    'img',
     'strong',
     'u',
     'a',
@@ -118,6 +117,18 @@ def replace_header_if_contains_h1_h6_tags(_tag):
         _tag.replace_with(BeautifulSoup(subheaders_as_string, "html.parser"))
 
 
+def strip_unnecessary_attributes(_soup):
+    for _tag in _soup.find_all():
+        if not isinstance(_tag, NavigableString):
+            for _subtag in _tag.descendants:
+                if _subtag.name == 'a':
+                    _href = _subtag.attrs.get('href', None)
+                    if _href is not None:
+                        _subtag.attrs = {'href': _href}
+                else:
+                    _subtag.attrs = {}
+
+
 def unwrap_divs(_tag):
     child_tags = [child_tag for child_tag in _tag.contents if
                   not isinstance(child_tag, NavigableString)
@@ -129,14 +140,6 @@ def unwrap_divs(_tag):
 def remove_divs_with_short_content(_soup):
     for _tag in _soup.find_all():
         if not isinstance(_tag, NavigableString):
-            for _subtag in _tag.descendants:
-                if _subtag.name == 'a':
-                    _href = _subtag.attrs.get('href', None)
-                    if _href is not None:
-                        _subtag.attrs = {'href': _href}
-                else:
-                    _subtag.attrs = {}
-
             string_ = ''.join(tags_as_string(_tag.contents).split())
 
             is_div_with_short_content = _tag.name == 'div' and len(string_) < 60
@@ -160,25 +163,26 @@ def remove_tags_that_only_contain_links(_soup):
 
 def remove_tags_with_low_text_length_to_tag_length_ratio(_soup):
     for _tag in _soup.find_all():
-        _text_length = 0
-        _tag_length = len(tags_as_string(_tag.contents)) + 1
-        for _subtag in _tag.descendants:
-            if isinstance(_subtag, NavigableString):
-                _text_length += len(_subtag)
-        ratio = _text_length / _tag_length
-        if ratio < 0.4:
-            _tag.extract()
-            print('{} ——— {} ——— {} ——— {}'.format(_tag, _text_length, _tag_length, _text_length / _tag_length))
-        # print('{} ——— {} ——— {} ——— {}'.format(_tag, _text_length, _tag_length, _text_length / _tag_length))
+        if _tag.name not in whitelisted_tags:
+            _text_length = 0
+            _tag_length = len(tags_as_string(_tag.contents)) + 1
+            for _subtag in _tag.descendants:
+                if isinstance(_subtag, NavigableString):
+                    _text_length += len(_subtag)
+            ratio = _text_length / _tag_length
+            if ratio < 0.45:
+                _tag.extract()
+                # print('{} ——— {} ——— {} ——— {}'.format(_tag, _text_length, _tag_length, _text_length / _tag_length))
+            # print('{} ——— {} ——— {} ——— {}'.format(_tag, _text_length, _tag_length, _text_length / _tag_length))
 
 
 # file_path = 'resources/lenta.txt'
 # file_path = 'resources/lenta2.txt'
-file_path = 'resources/gazeta.txt'
+# file_path = 'resources/gazeta.txt'
 # file_path = 'resources/gazeta2.txt'
 # file_path = 'resources/gazeta3.txt'
 # file_path = 'resources/t-j.txt'
-# file_path = 'resources/t-j2.txt'
+file_path = 'resources/t-j2.txt'
 # file_path = 'resources/wikipedia.txt'
 with open(file_path, 'rb') as file:
     webpage = file.read()
@@ -202,6 +206,8 @@ with open(file_path, 'rb') as file:
             continue
         replace_header_if_contains_h1_h6_tags(tag)
 
+    strip_unnecessary_attributes(body)
+
     # Iterative process of polishing the document
     while True:
         old_document = body.prettify()
@@ -210,7 +216,7 @@ with open(file_path, 'rb') as file:
             unwrap_divs(tag)
             remove_if_empty(tag)
 
-        remove_divs_with_short_content(body)
+        # remove_divs_with_short_content(body)
         remove_tags_that_only_contain_links(body)
         remove_tags_with_low_text_length_to_tag_length_ratio(body)
 
@@ -219,8 +225,8 @@ with open(file_path, 'rb') as file:
         # print('===')
         # print(body.prettify())
 
-        # if old_document == body.prettify():
-        break
+        if old_document == body.prettify():
+            break
 
     print()
     print()
