@@ -126,7 +126,7 @@ def unwrap_divs(_tag):
         _tag.unwrap()
 
 
-def remove_if_div_with_short_content(_soup):
+def remove_divs_with_short_content(_soup):
     for _tag in _soup.find_all():
         if not isinstance(_tag, NavigableString):
             for _subtag in _tag.descendants:
@@ -138,7 +138,6 @@ def remove_if_div_with_short_content(_soup):
 
             string_ = ''.join(tags_as_string(_tag.contents).split())
 
-
             is_div_with_short_content = _tag.name == 'div' and len(string_) < 60
             if is_div_with_short_content:
                 _tag.extract()
@@ -149,13 +148,26 @@ def remove_if_div_with_short_content(_soup):
             # print()
 
 
-def remove_if_tag_only_contain_links(_soup):
+def remove_tags_that_only_contain_links(_soup):
     for _tag in _soup.find_all():
         _children = set([_child.name for _child in _tag.contents if _child.name is not None])
         # print('{} ——— {} ——— {}'.format(_tag, _children, len(tags_as_string(_tag.contents))))
         if _children == {'a'} and len(tags_as_string(_tag.contents)) < 120:
             _tag.extract()
             # print()
+
+
+def remove_tags_with_low_text_length_to_tag_length_ratio(_soup):
+    for _tag in _soup.find_all():
+        _text_length = 0
+        _tag_length = len(tags_as_string(_tag.contents)) + 1
+        for _subtag in _tag.descendants:
+            if isinstance(_subtag, NavigableString):
+                _text_length += len(_subtag)
+        ratio = _text_length / _tag_length
+        if ratio < 0.5:
+            _tag.extract()
+        # print('{} ——— {} ——— {} ——— {}'.format(_tag, _text_length, _tag_length, _text_length / _tag_length))
 
 
 # with open('resources/gazeta.txt', 'rb') as file:
@@ -181,25 +193,20 @@ with open('resources/lenta.txt', 'rb') as file:
             continue
         replace_header_if_contains_h1_h6_tags(tag)
 
+    # Iterative process of polishing the document
     while True:
-        current_document = body.prettify()
+        old_document = body.prettify()
 
         for tag in body.find_all():
             unwrap_divs(tag)
             remove_if_empty(tag)
 
-        remove_if_div_with_short_content(body)
-        remove_if_tag_only_contain_links(body)
+        remove_divs_with_short_content(body)
+        remove_tags_that_only_contain_links(body)
+        remove_tags_with_low_text_length_to_tag_length_ratio(body)
 
-        if current_document == body.prettify():
-            break
-
-    # for tag in body.find_all():
-    #     for subtag in tag.descendants:
-    #         subtag.attrs = {}
-    #
-    #     string = ''.join(tags_as_string(tag.contents).split())
-    #     print('{} - {} - {}'.format(tag, string, len(string)))
+        # if old_document == body.prettify():
+        break
 
     print()
     print()
