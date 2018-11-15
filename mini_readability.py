@@ -170,8 +170,12 @@ def remove_tags_with_low_text_length_to_tag_length_ratio(_soup):
         # print('{} ——— {} ——— {} ——— {}'.format(_tag, _text_length, _tag_length, _text_length / _tag_length))
 
 
-# with open('resources/gazeta.txt', 'rb') as file:
-with open('resources/lenta.txt', 'rb') as file:
+# file_path = 'resources/lenta.txt'
+file_path = 'resources/lenta2.txt'
+# file_path = 'resources/gazeta.txt'
+# file_path = 'resources/gazeta2.txt'
+# file_path = 'resources/gazeta3.txt'
+with open(file_path, 'rb') as file:
     webpage = file.read()
     # doc = Document(webpage)
     # print(doc.summary())

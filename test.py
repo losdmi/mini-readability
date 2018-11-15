@@ -1,11 +1,11 @@
 import requests
 from bs4 import BeautifulSoup, Comment, NavigableString
 
-# url = 'https://www.gazeta.ru/culture/photo/yubilei_svetlany_surganovoi.shtml'
-# r = requests.get(url)
-# with open('resources/gazeta.txt', 'wb') as file:
-#     file.write(r.content)
-# exit()
+url = 'https://www.gazeta.ru/science/photo/buran-2018.shtml'
+r = requests.get(url)
+with open('resources/gazeta3.txt', 'wb') as file:
+    file.write(r.content)
+exit()
 
 whitelist = [
     'blockquote',
