@@ -26,7 +26,6 @@ blacklisted_tags = [
     'iframe',
     'svg',
     'nav',
-    'aside',
     'noindex',
     'footer'
 ]
@@ -37,7 +36,8 @@ blacklisted_classes = [
     'tabloid',
     'addition',
     'subscribe',
-    'preview'
+    'preview',
+    'recommend'
 ]
 
 blacklisted_ids = [
@@ -131,8 +131,9 @@ def remove_divs_with_short_content(_soup):
         if not isinstance(_tag, NavigableString):
             for _subtag in _tag.descendants:
                 if _subtag.name == 'a':
-                    _href = _subtag.attrs['href']
-                    _subtag.attrs = {'href': _href}
+                    _href = _subtag.attrs.get('href', None)
+                    if _href is not None:
+                        _subtag.attrs = {'href': _href}
                 else:
                     _subtag.attrs = {}
 
@@ -171,10 +172,13 @@ def remove_tags_with_low_text_length_to_tag_length_ratio(_soup):
 
 
 # file_path = 'resources/lenta.txt'
-file_path = 'resources/lenta2.txt'
+# file_path = 'resources/lenta2.txt'
 # file_path = 'resources/gazeta.txt'
 # file_path = 'resources/gazeta2.txt'
 # file_path = 'resources/gazeta3.txt'
+# file_path = 'resources/t-j.txt'
+file_path = 'resources/t-j2.txt'
+# file_path = 'resources/wikipedia.txt'
 with open(file_path, 'rb') as file:
     webpage = file.read()
     # doc = Document(webpage)
@@ -209,8 +213,8 @@ with open(file_path, 'rb') as file:
         remove_tags_that_only_contain_links(body)
         remove_tags_with_low_text_length_to_tag_length_ratio(body)
 
-        # if old_document == body.prettify():
-        break
+        if old_document == body.prettify():
+            break
 
     print()
     print()
