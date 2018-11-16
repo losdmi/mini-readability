@@ -1,3 +1,4 @@
+import re
 import requests
 from bs4 import BeautifulSoup, Comment, NavigableString
 
@@ -56,6 +57,17 @@ text_headers = [
     'h6',
 ]
 
+tags_for_newline = [
+    'li',
+]
+
+tags_for_double_newline = text_headers + [
+    'p',
+    'div',
+    'ul',
+    'ol',
+]
+
 
 ###
 
@@ -69,7 +81,7 @@ def tags_as_string(tags):
 
 def remove_if_blacklisted_tag(_tag):
     if _tag.name.lower() in blacklisted_tags:
-        _tag.extract()
+        _tag.decompose()
         return True
     else:
         return False
@@ -77,7 +89,7 @@ def remove_if_blacklisted_tag(_tag):
 
 def remove_if_empty(_tag):
     if not _tag.get_text(strip=True) and _tag.name not in whitelisted_tags:
-        _tag.extract()
+        _tag.decompose()
         return True
     else:
         return False
@@ -90,7 +102,7 @@ def remove_if_blacklisted_class(_tag):
             ),
             blacklisted_classes
     )):
-        _tag.extract()
+        _tag.decompose()
         return True
     else:
         return False
@@ -103,7 +115,7 @@ def remove_if_blacklisted_id(_tag):
             ),
             blacklisted_ids
     )):
-        _tag.extract()
+        _tag.decompose()
         return True
     else:
         return False
@@ -147,21 +159,65 @@ def remove_tags_with_low_text_length_to_tag_length_ratio(_soup):
                     _text_length += len(_subtag)
             ratio = _text_length / _tag_length
             if ratio < 0.45:
-                _tag.extract()
+                _tag.decompose()
                 # print('{} ——— {} ——— {} ——— {}'.format(_tag, _text_length, _tag_length, _text_length / _tag_length))
             # print('{} ——— {} ——— {} ——— {}'.format(_tag, _text_length, _tag_length, _text_length / _tag_length))
+
+
+def add_newlines_before_tags(_soup):
+    for _tag in _soup.find_all():
+        if _tag.name in tags_for_newline:
+            br = BeautifulSoup('<br>', 'html.parser').br
+            _tag.insert_before(br)
+        elif _tag.name in tags_for_double_newline:
+            br = BeautifulSoup('<br>', 'html.parser').br
+            _tag.insert_before(br)
+            br = BeautifulSoup('<br>', 'html.parser').br
+            _tag.insert_before(br)
+
+
+def unwrap_nested_tags(_body):
+    html = ''.join(map(lambda _tag: str(_tag).strip(), _body.prettify().split('\n')))
+    # _bs = BeautifulSoup('<html>' + str(_body).replace('\n', '') + '</html>', 'html.parser')
+    _bs = BeautifulSoup('<html>' + html + '</html>', 'html.parser')
+    while len(_bs.contents) == 1:
+        _bs.contents[0].unwrap()
+    # new_bs.html.unwrap()
+    # print(new_bs.contents[0].name)
+    return _bs
+
+
+def remove_tags(_soup):
+    _bs = BeautifulSoup(str(_soup).replace('\n', ''), 'html.parser')
+    for _tag in _bs.find_all():
+        if _tag.name == 'span':
+            _tag.string = '{}'.format(tags_as_string(_tag.contents).strip())
+        if _tag.name not in ['a', 'br']:
+            _tag.unwrap()
+    return _bs
+
+
+def remove_extra_br(_soup):
+    pass
+
+
+def replace_tags(_soup):
+    for _tag in _soup.find_all():
+        if _tag.name == 'br':
+            _tag.replace_with('\n')
 
 
 # file_path = 'resources/lenta.txt'
 # file_path = 'resources/lenta2.txt'
 # file_path = 'resources/gazeta.txt'
-# file_path = 'resources/gazeta2.txt'
+file_path = 'resources/gazeta2.txt'
 # file_path = 'resources/gazeta3.txt'
 # file_path = 'resources/t-j.txt'
 # file_path = 'resources/t-j2.txt'
 # file_path = 'resources/some_blog.txt'
 # file_path = 'resources/medium.txt'
-file_path = 'resources/medium2.txt'
+# file_path = 'resources/medium2.txt'
+
 with open(file_path, 'rb') as file:
     webpage = file.read()
     # doc = Document(webpage)
@@ -205,9 +261,16 @@ with open(file_path, 'rb') as file:
         if old_document == body.prettify():
             break
 
-    print()
-    print()
-    print()
+    article = unwrap_nested_tags(body)
 
-    print(body.prettify())
-    # print(body.get_text())
+    #
+    # convert html to text
+    #
+
+    add_newlines_before_tags(article)
+    article = remove_tags(article)
+    remove_extra_br(article)
+    replace_tags(article)
+
+    # print(str(article).replace('\n\n+', '\n\n'))
+    print(re.sub('\n\n+', '\n\n', str(article)).strip())
