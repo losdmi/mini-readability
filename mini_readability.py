@@ -1,7 +1,3 @@
-import re
-from textwrap import wrap
-
-import requests
 from bs4 import BeautifulSoup, Comment, NavigableString
 
 
@@ -192,76 +188,61 @@ class MiniRedability:
 
     @staticmethod
     def _limit_number_of_symbols_per_line(_article):
+        from textwrap import wrap
+
         _lines = []
         for _line in _article.split('\n'):
             _lines.append('\n'.join(wrap(_line, 80, break_long_words=False, break_on_hyphens=False)))
         return '\n'.join(_lines)
 
-    def get_article(self):
-        # file_path = 'resources/lenta.txt'
-        # file_path = 'resources/lenta2.txt'
-        # file_path = 'resources/gazeta.txt'
-        # file_path = 'resources/gazeta2.txt'
-        # file_path = 'resources/gazeta3.txt'
-        file_path = 'resources/t-j.txt'
-        # file_path = 'resources/t-j2.txt'
-        # file_path = 'resources/some_blog.txt'
-        # file_path = 'resources/medium.txt'
-        # file_path = 'resources/medium2.txt'
-        with open(file_path, 'rb') as file:
-            webpage = file.read()
-            # doc = Document(webpage)
-            # print(doc.summary())
-            # soup = BeautifulSoup(r.content, 'html.parser', from_encoding='windows-1251')
-            soup = BeautifulSoup(webpage, 'html.parser')
-            body = soup.find('body')
+    def get_article(self, _url):
+        import requests
+        import re
 
-            # Extract comments
-            comments = body.findAll(text=lambda text: isinstance(text, Comment))
-            for comment in comments:
-                comment.extract()
+        soup = BeautifulSoup(requests.get(_url).content, 'html.parser')
+        body = soup.find('body')
 
-            # bold remove unnecessary tags
+        # Extract comments
+        comments = body.findAll(text=lambda text: isinstance(text, Comment))
+        for comment in comments:
+            comment.extract()
+
+        # bold remove unnecessary tags
+        for tag in body.find_all():
+            if self._remove_if_empty(tag) \
+                    or self._remove_if_blacklisted_tag(tag) \
+                    or self._remove_if_blacklisted_class(tag) \
+                    or self._remove_if_blacklisted_id(tag):
+                continue
+            self._replace_header_if_contains_h1_h6_tags(tag)
+
+        self._strip_unnecessary_attributes(body)
+
+        # Iterative process of polishing the document
+        while True:
+            old_document = body.prettify()
+
             for tag in body.find_all():
-                if self._remove_if_empty(tag) \
-                        or self._remove_if_blacklisted_tag(tag) \
-                        or self._remove_if_blacklisted_class(tag) \
-                        or self._remove_if_blacklisted_id(tag):
-                    continue
-                self._replace_header_if_contains_h1_h6_tags(tag)
+                self._unwrap_divs(tag)
+                self._remove_if_empty(tag)
 
-            self._strip_unnecessary_attributes(body)
+            self._remove_tags_with_low_text_length_to_tag_length_ratio(body)
 
-            # Iterative process of polishing the document
-            while True:
-                old_document = body.prettify()
+            if old_document == body.prettify():
+                break
 
-                for tag in body.find_all():
-                    self._unwrap_divs(tag)
-                    self._remove_if_empty(tag)
+        article = self._unwrap_nested_tags(body)
 
-                self._remove_tags_with_low_text_length_to_tag_length_ratio(body)
+        self._add_newlines_before_tags(article)
+        article = self._remove_tags(article)
+        self._replace_tags(article)
 
-                if old_document == body.prettify():
-                    break
+        article = re.sub('\n\n+', '\n\n', str(article)).strip()
 
-            article = self._unwrap_nested_tags(body)
+        article = self._limit_number_of_symbols_per_line(article)
 
-            self._add_newlines_before_tags(article)
-            article = self._remove_tags(article)
-            self._replace_tags(article)
-
-            article = re.sub('\n\n+', '\n\n', str(article)).strip()
-
-            article = self._limit_number_of_symbols_per_line(article)
-
-            print(article)
+        print(article)
 
 
-###
-
-# url = 'https://www.gazeta.ru/culture/photo/yubilei_svetlany_surganovoi.shtml'
-# r = requests.get(url)
-
-
-MiniRedability().get_article()
+if __name__ == '__main__':
+    MiniRedability().get_article('https://www.gazeta.ru/culture/photo/yubilei_svetlany_surganovoi.shtml')
