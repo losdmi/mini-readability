@@ -1,9 +1,8 @@
 import re
+from textwrap import wrap
+
 import requests
 from bs4 import BeautifulSoup, Comment, NavigableString
-
-# url = 'https://lenta.ru/news/2018/11/14/sankcii/'
-# request.urlretrieve(url, 'lenta.txt')
 
 whitelisted_tags = [
     'blockquote',
@@ -160,8 +159,6 @@ def remove_tags_with_low_text_length_to_tag_length_ratio(_soup):
             ratio = _text_length / _tag_length
             if ratio < 0.45:
                 _tag.decompose()
-                # print('{} ——— {} ——— {} ——— {}'.format(_tag, _text_length, _tag_length, _text_length / _tag_length))
-            # print('{} ——— {} ——— {} ——— {}'.format(_tag, _text_length, _tag_length, _text_length / _tag_length))
 
 
 def add_newlines_before_tags(_soup):
@@ -178,12 +175,9 @@ def add_newlines_before_tags(_soup):
 
 def unwrap_nested_tags(_body):
     html = ''.join(map(lambda _tag: str(_tag).strip(), _body.prettify().split('\n')))
-    # _bs = BeautifulSoup('<html>' + str(_body).replace('\n', '') + '</html>', 'html.parser')
     _bs = BeautifulSoup('<html>' + html + '</html>', 'html.parser')
     while len(_bs.contents) == 1:
         _bs.contents[0].unwrap()
-    # new_bs.html.unwrap()
-    # print(new_bs.contents[0].name)
     return _bs
 
 
@@ -200,7 +194,7 @@ def remove_tags(_soup):
         elif _tag.name == 'a':
             _tag.replace_with(
                 BeautifulSoup(
-                    ' [{}]({}) '.format(tags_as_string(_tag.contents).strip(), _tag.attrs['href']),
+                    ' ({})[{}] '.format(tags_as_string(_tag.contents).strip(), _tag.attrs['href']),
                     'html.parser'
                 )
             )
@@ -209,22 +203,25 @@ def remove_tags(_soup):
     return _bs
 
 
-def remove_extra_br(_soup):
-    pass
-
-
 def replace_tags(_soup):
     for _tag in _soup.find_all():
         if _tag.name == 'br':
             _tag.replace_with('\n')
 
 
+def limit_number_of_symbols_per_line(_article):
+    _lines = []
+    for _line in _article.split('\n'):
+        _lines.append('\n'.join(wrap(_line, 80, break_long_words=False, break_on_hyphens=False)))
+    return '\n'.join(_lines)
+
+
 # file_path = 'resources/lenta.txt'
 # file_path = 'resources/lenta2.txt'
 # file_path = 'resources/gazeta.txt'
-file_path = 'resources/gazeta2.txt'
+# file_path = 'resources/gazeta2.txt'
 # file_path = 'resources/gazeta3.txt'
-# file_path = 'resources/t-j.txt'
+file_path = 'resources/t-j.txt'
 # file_path = 'resources/t-j2.txt'
 # file_path = 'resources/some_blog.txt'
 # file_path = 'resources/medium.txt'
@@ -262,27 +259,19 @@ with open(file_path, 'rb') as file:
             unwrap_divs(tag)
             remove_if_empty(tag)
 
-        # TODO if site is wikipedia - don't run this
         remove_tags_with_low_text_length_to_tag_length_ratio(body)
-
-        # print('===')
-        # print('===')
-        # print('===')
-        # print(body.prettify())
 
         if old_document == body.prettify():
             break
 
     article = unwrap_nested_tags(body)
 
-    #
-    # convert html to text
-    #
-
     add_newlines_before_tags(article)
     article = remove_tags(article)
-    remove_extra_br(article)
     replace_tags(article)
 
-    # print(str(article).replace('\n\n+', '\n\n'))
-    print(re.sub('\n\n+', '\n\n', str(article)).strip())
+    article = re.sub('\n\n+', '\n\n', str(article)).strip()
+
+    article = limit_number_of_symbols_per_line(article)
+
+    print(article)
