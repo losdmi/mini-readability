@@ -193,12 +193,18 @@ def remove_tags(_soup):
         if _tag.name == 'span':
             _tag.replace_with(
                 BeautifulSoup(
-                    tags_as_string(_tag.contents).strip(),
+                    ' {} '.format(tags_as_string(_tag.contents).strip()),
                     'html.parser'
                 )
             )
-            continue
-        if _tag.name not in ['a', 'br']:
+        elif _tag.name == 'a':
+            _tag.replace_with(
+                BeautifulSoup(
+                    ' [{}]({}) '.format(tags_as_string(_tag.contents).strip(), _tag.attrs['href']),
+                    'html.parser'
+                )
+            )
+        elif _tag.name not in ['br']:
             _tag.unwrap()
     return _bs
 
@@ -216,7 +222,7 @@ def replace_tags(_soup):
 # file_path = 'resources/lenta.txt'
 # file_path = 'resources/lenta2.txt'
 # file_path = 'resources/gazeta.txt'
-# file_path = 'resources/gazeta2.txt'
+file_path = 'resources/gazeta2.txt'
 # file_path = 'resources/gazeta3.txt'
 # file_path = 'resources/t-j.txt'
 # file_path = 'resources/t-j2.txt'
