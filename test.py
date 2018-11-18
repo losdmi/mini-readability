@@ -1,5 +1,15 @@
+import re
 import requests
 from bs4 import BeautifulSoup, Comment, NavigableString
+
+url = 'https://lenta.ru/news/2018/11/14/sankcii/pep'
+# print(bool(re.match(r'^.*(\.\w+)$', url)))
+print(re.sub(
+    '\.\w*$',
+    '',
+    url
+))
+exit()
 
 url = 'https://medium.com/@KKruglov/%D0%B1%D1%83%D0%BC-%D0%BF%D0%BE%D0%B4%D0%BA%D0%B0%D1%81%D1%82%D0%BE%D0%B2-766495006408'
 r = requests.get(url)

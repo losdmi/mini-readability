@@ -1,5 +1,8 @@
 from bs4 import BeautifulSoup, Comment, NavigableString
 from urllib.parse import urlparse
+import os
+import requests
+import re
 
 
 class MiniRedability:
@@ -61,13 +64,29 @@ class MiniRedability:
             'ol',
         ]
 
-    def _validate_url(self, _url):
+    @staticmethod
+    def _validate_url(_url):
         try:
             _result = urlparse(_url)
-            self._url_domain = '{uri.scheme}://{uri.netloc}'.format(uri=_result)
             return all([_result.scheme, _result.netloc, _result.path])
         except:
             return False
+
+    def _extract_info_from_url(self, _url):
+        _uri = urlparse(_url)
+
+        self._url_domain = '{uri.scheme}://{uri.netloc}'.format(uri=_uri)
+
+        _path = _uri.path[1:]
+        if _path[-1] == '/':
+            _path += 'index'
+        else:
+            _path = re.sub('\.\w*$', '', _path)
+        _path += '.txt'
+
+        self._file_path = os.path.abspath(os.path.expanduser(
+            os.path.join(os.getcwd(), _uri.netloc, _path)
+        ))
 
     @staticmethod
     def _tags_as_string(tags):
@@ -212,8 +231,9 @@ class MiniRedability:
             print('Invalid url: ' + _url)
             return
 
-        import requests
-        import re
+        self._extract_info_from_url(_url)
+        # print(self._file_path)
+        # exit()
 
         soup = BeautifulSoup(requests.get(_url).content, 'html.parser')
         body = soup.find('body')
@@ -257,7 +277,15 @@ class MiniRedability:
 
         article = self._limit_number_of_symbols_per_line(article)
 
-        print(article)
+        self._save_article(article, self._file_path)
+
+    @staticmethod
+    def _save_article(article, _file_path):
+        _dirname = os.path.dirname(_file_path)
+        if not os.path.exists(_dirname):
+            os.makedirs(_dirname)
+        with open(_file_path, 'w+') as file:
+            file.write(article)
 
 
 if __name__ == '__main__':
