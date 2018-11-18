@@ -3,66 +3,92 @@ from urllib.parse import urlparse
 import os
 import requests
 import re
+import json
+import sys
 
 
 class MiniRedability:
-    def __init__(self):
-        self._whitelisted_tags = [
-            'blockquote',
-            'em',
-            'i',
-            'strong',
-            'u',
-            'a',
-            'b',
-            'p',
-            'br',
-            'code',
-            'pre'
-        ]
-        self._blacklisted_tags = [
-            'script',
-            'noscript',
-            'style',
-            'iframe',
-            'svg',
-            'nav',
-            'noindex',
-            'footer'
-        ]
-        self._blacklisted_classes = [
-            'sidebar',
-            'footer',
-            'tabloid',
-            'addition',
-            'subscribe',
-            'preview',
-            'recommend'
-        ]
-        self._blacklisted_ids = [
-            'sidebar',
-            'footer',
-            'tabloid',
-            'addition',
-            'subscribe',
-        ]
-        self._text_headers = [
-            'h1',
-            'h2',
-            'h3',
-            'h4',
-            'h5',
-            'h6',
-        ]
-        self._tags_for_newline = [
-            'li',
-        ]
-        self._tags_for_double_newline = self._text_headers + [
-            'p',
-            'div',
-            'ul',
-            'ol',
-        ]
+    def __init__(self, **kwargs):
+        self._whitelisted_tags = kwargs.get('whitelisted_tags')
+        if self._whitelisted_tags is None:
+            self._whitelisted_tags = [
+                'blockquote',
+                'em',
+                'i',
+                'strong',
+                'u',
+                'a',
+                'b',
+                'p',
+                'br',
+                'code',
+                'pre'
+            ]
+
+        self._blacklisted_tags = kwargs.get('blacklisted_tags')
+        if self._blacklisted_tags is None:
+            self._blacklisted_tags = [
+                'script',
+                'noscript',
+                'style',
+                'iframe',
+                'svg',
+                'nav',
+                'noindex',
+                'footer'
+            ]
+
+        self._blacklisted_classes = kwargs.get('blacklisted_classes')
+        if self._blacklisted_classes is None:
+            self._blacklisted_classes = [
+                'sidebar',
+                'footer',
+                'tabloid',
+                'addition',
+                'subscribe',
+                'preview',
+                'recommend'
+            ]
+
+        self._blacklisted_ids = kwargs.get('blacklisted_ids')
+        if self._blacklisted_ids is None:
+            self._blacklisted_ids = [
+                'sidebar',
+                'footer',
+                'tabloid',
+                'addition',
+                'subscribe',
+            ]
+
+        self._text_headers = kwargs.get('text_headers')
+        if self._text_headers is None:
+            self._text_headers = [
+                'h1',
+                'h2',
+                'h3',
+                'h4',
+                'h5',
+                'h6',
+            ]
+
+        self._tags_for_newline = kwargs.get('tags_for_newline')
+        if self._tags_for_newline is None:
+            self._tags_for_newline = [
+                'li',
+            ]
+
+        self._tags_for_double_newline = kwargs.get('tags_for_double_newline')
+        if self._tags_for_double_newline is None:
+            self._tags_for_double_newline = [
+                'p',
+                'div',
+                'ul',
+                'ol',
+            ]
+
+        self._path_to_save = kwargs.get('path_to_save')
+        if self._path_to_save is None:
+            self._path_to_save = os.getcwd()
 
     @staticmethod
     def _validate_url(_url):
@@ -85,7 +111,7 @@ class MiniRedability:
         _path += '.txt'
 
         self._file_path = os.path.abspath(os.path.expanduser(
-            os.path.join(os.getcwd(), _uri.netloc, _path)
+            os.path.join(self._path_to_save, _uri.netloc, _path)
         ))
 
     @staticmethod
@@ -173,7 +199,7 @@ class MiniRedability:
             if _tag.name in self._tags_for_newline:
                 br = BeautifulSoup('<br>', 'html.parser').br
                 _tag.insert_before(br)
-            elif _tag.name in self._tags_for_double_newline:
+            elif _tag.name in self._tags_for_double_newline + self._text_headers:
                 br = BeautifulSoup('<br>', 'html.parser').br
                 _tag.insert_before(br)
                 br = BeautifulSoup('<br>', 'html.parser').br
@@ -203,7 +229,7 @@ class MiniRedability:
                     _href = self._url_domain + _href
                 _tag.replace_with(
                     BeautifulSoup(
-                        ' ({})[{}] '.format(self._tags_as_string(_tag.contents).strip(), _href),
+                        ' [{}] [{}] '.format(self._tags_as_string(_tag.contents).strip(), _href),
                         'html.parser'
                     )
                 )
@@ -226,7 +252,7 @@ class MiniRedability:
             _lines.append('\n'.join(wrap(_line, 80, break_long_words=False, break_on_hyphens=False)))
         return '\n'.join(_lines)
 
-    def get_article(self, _url):
+    def save_article(self, _url):
         if not self._validate_url(_url):
             print('Invalid url: ' + _url)
             return
@@ -289,11 +315,26 @@ class MiniRedability:
 
 
 if __name__ == '__main__':
-    import sys
+    config_path = os.path.dirname(os.path.realpath(__file__))
+
+    try:
+        with open(os.path.join(config_path, 'config.json')) as json_data_file:
+            config = json.load(json_data_file)
+    except FileNotFoundError:
+        config = {}
 
     if len(sys.argv) < 2:
         print("Enter article's URL as a first argument.")
         exit(1)
 
     url = sys.argv[1]
-    MiniRedability().get_article(url)
+    MiniRedability(
+        whitelisted_tags=config.get('whitelisted_tags'),
+        blacklisted_tags=config.get('blacklisted_tags'),
+        blacklisted_classes=config.get('blacklisted_classes'),
+        blacklisted_ids=config.get('blacklisted_ids'),
+        text_headers=config.get('text_headers'),
+        tags_for_newline=config.get('tags_for_newline'),
+        tags_for_double_newline=config.get('tags_for_double_newline'),
+        path_to_save=config.get('path_to_save')
+    ).save_article(url)

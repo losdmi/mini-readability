@@ -1,0 +1,58 @@
+{
+  "whitelisted_tags": [
+    "blockquote",
+    "em",
+    "i",
+    "strong",
+    "u",
+    "a",
+    "b",
+    "p",
+    "br",
+    "code",
+    "pre"
+  ],
+  "blacklisted_tags": [
+    "script",
+    "noscript",
+    "style",
+    "iframe",
+    "svg",
+    "nav",
+    "noindex",
+    "footer"
+  ],
+  "blacklisted_classes": [
+    "sidebar",
+    "footer",
+    "tabloid",
+    "addition",
+    "subscribe",
+    "preview",
+    "recommend"
+  ],
+  "blacklisted_ids": [
+    "sidebar",
+    "footer",
+    "tabloid",
+    "addition",
+    "subscribe"
+  ],
+  "text_headers": [
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "h5",
+    "h6"
+  ],
+  "tags_for_newline": [
+    "li"
+  ],
+  "tags_for_double_newline": [
+    "p",
+    "div",
+    "ul",
+    "ol"
+  ]
+}

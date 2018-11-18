@@ -1,73 +1,29 @@
-import re
-import requests
-from bs4 import BeautifulSoup, Comment, NavigableString
+import os
 
-url = 'https://lenta.ru/news/2018/11/14/sankcii/pep'
-# print(bool(re.match(r'^.*(\.\w+)$', url)))
-print(re.sub(
-    '\.\w*$',
-    '',
-    url
-))
-exit()
+from mini_readability import MiniRedability
 
-url = 'https://medium.com/@KKruglov/%D0%B1%D1%83%D0%BC-%D0%BF%D0%BE%D0%B4%D0%BA%D0%B0%D1%81%D1%82%D0%BE%D0%B2-766495006408'
-r = requests.get(url)
-with open('resources/medium2.txt', 'wb') as file:
-    file.write(r.content)
-exit()
-
-whitelist = [
-    'blockquote',
-    'em',
-    'i',
-    'img',
-    'strong',
-    'u',
-    'a',
-    'b',
-    'p',
-    'br',
-    'code',
-    'pre'
-]
-
-blacklist = [
-    'script',
-    'noscript',
-    'style',
-    'iframe',
-    'svg',
-]
-
-text_headers = [
-    'h1',
-    'h2',
-    'h3',
-    'h4',
-    'h5',
-    'h6',
+test_urls = [
+    'https://lenta.ru/news/2018/11/14/sankcii/',
+    'https://lenta.ru/news/2018/11/15/itsaprotest/',
+    'https://www.gazeta.ru/culture/photo/yubilei_svetlany_surganovoi.shtml',
+    'https://www.gazeta.ru/science/photo/buran-2018.shtml',
+    'https://www.gazeta.ru/business/2018/11/15/12059587.shtml',
+    'https://journal.tinkoff.ru/no-diploma-cash/',
+    'https://journal.tinkoff.ru/ask/bolnichniy-bez-raboty/',
+    'https://medium.com/@KKruglov/127915b78ce2',
+    'https://medium.com/@KKruglov/%D0%B1%D1%83%D0%BC-%D0%BF%D0%BE%D0%B4%D0%BA%D0%B0%D1%81%D1%82%D0%BE%D0%B2-766495006408',
 ]
 
 
-def tags_as_string(tags):
-    return ''.join(list(map(lambda _tag: str(_tag), list(tags))))
+test_output_folder = os.path.join(
+    os.path.dirname(os.path.realpath(__file__)),
+    'test'
+)
+if not os.path.exists(test_output_folder):
+    os.makedirs(test_output_folder)
 
+mr = MiniRedability(path_to_save=test_output_folder)
 
-html = """<div><a><img/></a>Культура/<time>13.11.2018,19:15</time><a><img/></a>Культура/<time>13.11.2018,09:14</time><a><img/></a>Культура/<time>12.11.2018,22:35</time><a><img/></a>Культура/<time>12.11.2018,10:37</time><a><img/></a>Культура/<time>11.11.2018,10:56</time><a><img/></a>Культура/<time>10.11.2018,23:58</time><a><img/></a>Культура/<time>10.11.2018,22:09</time><a><img/></a>Культура/<time>10.11.2018,21:33</time><a><img/></a></div>"""
-soup = BeautifulSoup(html, 'html.parser')
-for tag in soup.find_all():
-    # if isinstance(tag, NavigableString):
-    #     print('{} ——— {}'.format(str(tag), str(tag.contents)))
-    _text_length = 0
-    _tag_length = len(tags_as_string(tag.contents)) + 1
-    for _subtag in tag.descendants:
-        if isinstance(_subtag, NavigableString):
-            _text_length += len(_subtag)
-    ratio = _text_length / _tag_length
-    # if ratio:
-    #     tag.extract()
-    print('{} ——— {} ——— {} ——— {}'.format(tag, _text_length, _tag_length, ratio))
-
-print()
-print(soup.prettify())
+for url in test_urls:
+    print('Processing url: ' + url)
+    mr.save_article(url)
