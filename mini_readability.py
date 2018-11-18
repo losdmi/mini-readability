@@ -5,6 +5,7 @@ import requests
 import re
 import json
 import sys
+import locale
 
 
 class MiniRedability:
@@ -224,8 +225,8 @@ class MiniRedability:
                     )
                 )
             elif _tag.name == 'a':
-                _href = _tag.attrs['href']
-                if _href[0] == '/':
+                _href = _tag.attrs.get('href')
+                if _href is not None and _href[0] == '/':
                     _href = self._url_domain + _href
                 _tag.replace_with(
                     BeautifulSoup(
@@ -310,8 +311,10 @@ class MiniRedability:
         _dirname = os.path.dirname(_file_path)
         if not os.path.exists(_dirname):
             os.makedirs(_dirname)
-        with open(_file_path, 'w+') as file:
-            file.write(article)
+        with open(_file_path, 'wb+') as file:
+            file.write(
+                article.replace('\n', os.linesep).encode(locale.getdefaultlocale()[1], errors='backslashreplace')
+            )
 
 
 if __name__ == '__main__':
