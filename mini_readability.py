@@ -61,6 +61,15 @@ class MiniRedability:
         ]
 
     @staticmethod
+    def _validate_url(_url):
+        from urllib.parse import urlparse
+        try:
+            _result = urlparse(_url)
+            return all([_result.scheme, _result.netloc, _result.path])
+        except:
+            return False
+
+    @staticmethod
     def _tags_as_string(tags):
         return ''.join(list(map(lambda _tag: str(_tag), list(tags))))
 
@@ -196,6 +205,10 @@ class MiniRedability:
         return '\n'.join(_lines)
 
     def get_article(self, _url):
+        if not self._validate_url(_url):
+            print('Invalid url: ' + _url)
+            return
+
         import requests
         import re
 
@@ -245,4 +258,11 @@ class MiniRedability:
 
 
 if __name__ == '__main__':
-    MiniRedability().get_article('https://www.gazeta.ru/culture/photo/yubilei_svetlany_surganovoi.shtml')
+    import sys
+
+    if len(sys.argv) < 2:
+        print("Enter article's URL as a first argument.")
+        exit(1)
+
+    url = sys.argv[1]
+    MiniRedability().get_article(url)
