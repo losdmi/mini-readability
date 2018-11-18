@@ -1,4 +1,5 @@
 from bs4 import BeautifulSoup, Comment, NavigableString
+from urllib.parse import urlparse
 
 
 class MiniRedability:
@@ -60,11 +61,10 @@ class MiniRedability:
             'ol',
         ]
 
-    @staticmethod
-    def _validate_url(_url):
-        from urllib.parse import urlparse
+    def _validate_url(self, _url):
         try:
             _result = urlparse(_url)
+            self._url_domain = '{uri.scheme}://{uri.netloc}'.format(uri=_result)
             return all([_result.scheme, _result.netloc, _result.path])
         except:
             return False
@@ -179,9 +179,12 @@ class MiniRedability:
                     )
                 )
             elif _tag.name == 'a':
+                _href = _tag.attrs['href']
+                if _href[0] == '/':
+                    _href = self._url_domain + _href
                 _tag.replace_with(
                     BeautifulSoup(
-                        ' ({})[{}] '.format(self._tags_as_string(_tag.contents).strip(), _tag.attrs['href']),
+                        ' ({})[{}] '.format(self._tags_as_string(_tag.contents).strip(), _href),
                         'html.parser'
                     )
                 )
@@ -190,7 +193,7 @@ class MiniRedability:
         return _bs
 
     @staticmethod
-    def _replace_tags(_soup):
+    def _replace_br_tags_with_newline(_soup):
         for _tag in _soup.find_all():
             if _tag.name == 'br':
                 _tag.replace_with('\n')
@@ -248,7 +251,7 @@ class MiniRedability:
 
         self._add_newlines_before_tags(article)
         article = self._remove_tags(article)
-        self._replace_tags(article)
+        self._replace_br_tags_with_newline(article)
 
         article = re.sub('\n\n+', '\n\n', str(article)).strip()
 
